@@ -42,10 +42,10 @@ describe('admin.projectManagement', () => {
 
   before(() => {
     const androidPromise = ensureAndroidApp()
-        .then((app) => {
-          androidApp = app;
-          return deleteAllShaCertificates(androidApp);
-        });
+      .then((app) => {
+        androidApp = app;
+        return deleteAllShaCertificates(androidApp);
+      });
     const iosPromise = ensureIosApp().then((app) => {
       iosApp = app;
     });
@@ -53,31 +53,16 @@ describe('admin.projectManagement', () => {
     return Promise.all([androidPromise, iosPromise]);
   });
 
-  describe('listAndroidApps()', () => {
-    it('successfully lists Android apps', () => {
-      return admin.projectManagement().listAndroidApps()
-          .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
-          .then((metadatas) => {
-            expect(metadatas.length).to.be.at.least(1);
-            const metadataOwnedByTest =
-                metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
-            expect(metadataOwnedByTest).to.exist;
-            expect(metadataOwnedByTest.appId).to.equal(androidApp.appId);
-          });
-    });
-  });
-
-  describe('listIosApps()', () => {
-    it('successfully lists iOS apps', () => {
-      return admin.projectManagement().listIosApps()
-          .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
-          .then((metadatas) => {
-            expect(metadatas.length).to.be.at.least(1);
-            const metadataOwnedByTest =
-                metadatas.find((metadata) => isIntegrationTestApp(metadata.bundleId));
-            expect(metadataOwnedByTest).to.exist;
-            expect(metadataOwnedByTest.appId).to.equal(iosApp.appId);
-          });
+  describe('iterateAndroidApps()', () => {
+    it('successfully iterates Android apps', async () => {
+      for await (const apps of admin.projectManagement().iterateAndroidApps()) {
+        const metadatas: any[] = await Promise.all(apps.map((app) => app.getMetadata()));
+        expect(metadatas.length).to.be.at.least(1);
+        const metadataOwnedByTest: any =
+          metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
+        expect(metadataOwnedByTest).to.exist;
+        expect(metadataOwnedByTest.appId).to.equal(androidApp.appId);
+      }
     });
   });
 
@@ -95,11 +80,11 @@ describe('admin.projectManagement', () => {
     it('successfully lists metadata of all apps', () => {
       return admin.projectManagement().listAppMetadata()
         .then((metadatas) => {
-            expect(metadatas.length).to.be.at.least(2);
-            const testAppMetadatas = metadatas.filter((metadata) =>
-                isIntegrationTestAppDisplayName(metadata.displayName) &&
-                (metadata.appId === androidApp.appId || metadata.appId === iosApp.appId));
-            expect(testAppMetadatas).to.have.length(2);
+          expect(metadatas.length).to.be.at.least(2);
+          const testAppMetadatas = metadatas.filter((metadata) =>
+            isIntegrationTestAppDisplayName(metadata.displayName) &&
+            (metadata.appId === androidApp.appId || metadata.appId === iosApp.appId));
+          expect(testAppMetadatas).to.have.length(2);
         });
     });
   });
@@ -128,10 +113,10 @@ describe('admin.projectManagement', () => {
     it('successfully sets Android app\'s display name', () => {
       const newDisplayName = generateUniqueAppDisplayName();
       return androidApp.setDisplayName(newDisplayName)
-          .then(() => androidApp.getMetadata())
-          .then((appMetadata) => {
-            expect(appMetadata.displayName).to.equal(newDisplayName);
-          });
+        .then(() => androidApp.getMetadata())
+        .then((appMetadata) => {
+          expect(appMetadata.displayName).to.equal(newDisplayName);
+        });
     });
   });
 
@@ -139,10 +124,10 @@ describe('admin.projectManagement', () => {
     it('successfully sets iOS app\'s display name', () => {
       const newDisplayName = generateUniqueAppDisplayName();
       return iosApp.setDisplayName(newDisplayName)
-          .then(() => iosApp.getMetadata())
-          .then((appMetadata) => {
-            expect(appMetadata.displayName).to.equal(newDisplayName);
-          });
+        .then(() => iosApp.getMetadata())
+        .then((appMetadata) => {
+          expect(appMetadata.displayName).to.equal(newDisplayName);
+        });
     });
   });
 
@@ -155,38 +140,38 @@ describe('admin.projectManagement', () => {
       //   4. Delete the cert we just created.
       //   5. Check that this app has no certs.
       return androidApp.getShaCertificates()
-          .then((certs) => {
-            expect(certs.length).to.equal(0);
+        .then((certs) => {
+          expect(certs.length).to.equal(0);
 
-            const shaCertificate = admin.projectManagement().shaCertificate(SHA_256_HASH);
-            return androidApp.addShaCertificate(shaCertificate);
-          })
-          .then(() => androidApp.getShaCertificates())
-          .then((certs) => {
-            expect(certs.length).to.equal(1);
-            expect(certs[0].shaHash).to.equal(SHA_256_HASH);
-            expect(certs[0].certType).to.equal('sha256');
-            expect(certs[0].resourceName).to.not.be.empty;
+          const shaCertificate = admin.projectManagement().shaCertificate(SHA_256_HASH);
+          return androidApp.addShaCertificate(shaCertificate);
+        })
+        .then(() => androidApp.getShaCertificates())
+        .then((certs) => {
+          expect(certs.length).to.equal(1);
+          expect(certs[0].shaHash).to.equal(SHA_256_HASH);
+          expect(certs[0].certType).to.equal('sha256');
+          expect(certs[0].resourceName).to.not.be.empty;
 
-            return androidApp.deleteShaCertificate(certs[0]);
-          })
-          .then(() => androidApp.getShaCertificates())
-          .then((certs) => {
-            expect(certs.length).to.equal(0);
-          });
+          return androidApp.deleteShaCertificate(certs[0]);
+        })
+        .then(() => androidApp.getShaCertificates())
+        .then((certs) => {
+          expect(certs.length).to.equal(0);
+        });
     });
 
     it('add a cert and then remove it fails due to missing resourceName',
-       () => {
-         const shaCertificate =
-             admin.projectManagement().shaCertificate(SHA_256_HASH);
-         return androidApp.addShaCertificate(shaCertificate)
-             .then(() => androidApp.deleteShaCertificate(shaCertificate))
-             .should.eventually.be
-             .rejectedWith(
-                 'Specified certificate does not include a resourceName')
-             .with.property('code', 'project-management/invalid-argument');
-       });
+      () => {
+        const shaCertificate =
+          admin.projectManagement().shaCertificate(SHA_256_HASH);
+        return androidApp.addShaCertificate(shaCertificate)
+          .then(() => androidApp.deleteShaCertificate(shaCertificate))
+          .should.eventually.be
+          .rejectedWith(
+            'Specified certificate does not include a resourceName')
+          .with.property('code', 'project-management/invalid-argument');
+      });
   });
 
   describe('androidApp.getConfig()', () => {
@@ -213,20 +198,26 @@ describe('admin.projectManagement', () => {
  *
  * @return {Promise<AndroidApp>} Android app owned by these integration tests.
  */
-function ensureAndroidApp(): Promise<admin.projectManagement.AndroidApp> {
-  return admin.projectManagement().listAndroidApps()
-      .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
-      .then((metadatas) => {
-        const metadataOwnedByTest =
-            metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
-        if (metadataOwnedByTest) {
-          return admin.projectManagement().androidApp(metadataOwnedByTest.appId);
-        }
+async function ensureAndroidApp(): Promise<admin.projectManagement.AndroidApp> {
+  let retApp;
 
-        // If no Android app owned by these integration tests was found, then create one.
-        return admin.projectManagement()
-            .createAndroidApp(generateUniqueAppNamespace(), generateUniqueAppDisplayName());
-      });
+  for await (const apps of admin.projectManagement().iterateAndroidApps()) {
+    const metadatas: any[] = await Promise.all(apps.map((app) => app.getMetadata()));
+    const metadataOwnedByTest =
+      metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
+    if (metadataOwnedByTest) {
+      retApp = await admin.projectManagement().androidApp(metadataOwnedByTest.appId);
+      break;
+    }
+
+    // If no Android app owned by these integration tests was found, then create one.
+    retApp = await admin.projectManagement()
+      .createAndroidApp(generateUniqueAppNamespace(), generateUniqueAppDisplayName());
+
+    break;
+  }
+
+  return retApp;
 }
 
 /**
@@ -234,20 +225,27 @@ function ensureAndroidApp(): Promise<admin.projectManagement.AndroidApp> {
  *
  * @return {Promise<IosApp>} iOS app owned by these integration tests.
  */
-function ensureIosApp(): Promise<admin.projectManagement.IosApp> {
-  return admin.projectManagement().listIosApps()
-      .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
-      .then((metadatas) => {
-        const metadataOwnedByTest =
-            metadatas.find((metadata) => isIntegrationTestApp(metadata.bundleId));
-        if (metadataOwnedByTest) {
-          return admin.projectManagement().iosApp(metadataOwnedByTest.appId);
-        }
+async function ensureIosApp(): Promise<admin.projectManagement.IosApp> {
+  let retApp;
 
-        // If no iOS app owned by these integration tests was found, then create one.
-        return admin.projectManagement()
-            .createIosApp(generateUniqueAppNamespace(), generateUniqueAppDisplayName());
-      });
+  for await (const apps of admin.projectManagement().iterateIosApps()) {
+    const metadatas = await Promise.all(apps.map((app) => app.getMetadata()));
+
+    const metadataOwnedByTest =
+      metadatas.find((metadata) => isIntegrationTestApp(metadata.bundleId));
+    if (metadataOwnedByTest) {
+      retApp = await admin.projectManagement().iosApp(metadataOwnedByTest.appId);
+      break;
+    }
+
+    // If no iOS app owned by these integration tests was found, then create one.
+    retApp = await admin.projectManagement()
+      .createIosApp(generateUniqueAppNamespace(), generateUniqueAppDisplayName());
+
+    break;
+  }
+
+  return retApp;
 }
 
 /**
@@ -255,10 +253,10 @@ function ensureIosApp(): Promise<admin.projectManagement.IosApp> {
  */
 function deleteAllShaCertificates(androidApp: admin.projectManagement.AndroidApp): Promise<void> {
   return androidApp.getShaCertificates()
-      .then((shaCertificates: admin.projectManagement.ShaCertificate[]) => {
-        return Promise.all(shaCertificates.map((cert) => androidApp.deleteShaCertificate(cert)));
-      })
-      .then(() => null);
+    .then((shaCertificates: admin.projectManagement.ShaCertificate[]) => {
+      return Promise.all(shaCertificates.map((cert) => androidApp.deleteShaCertificate(cert)));
+    })
+    .then(() => null);
 }
 
 /**
@@ -293,7 +291,7 @@ function isIntegrationTestApp(appNamespace: string): boolean {
  * @return {boolean} True if the specified appDisplayName belongs to these integration tests.
  */
 function isIntegrationTestAppDisplayName(appDisplayName: string): boolean {
-  return appDisplayName  && appDisplayName.startsWith(APP_DISPLAY_NAME_PREFIX);
+  return appDisplayName && appDisplayName.startsWith(APP_DISPLAY_NAME_PREFIX);
 }
 
 /**
