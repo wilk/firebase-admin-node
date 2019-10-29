@@ -17,7 +17,7 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as admin from '../../lib/index';
+import * as admin from '../../src/index';
 import { projectId } from './setup';
 
 const APP_NAMESPACE_PREFIX = 'com.adminsdkintegrationtest.a';
