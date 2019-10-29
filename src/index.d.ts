@@ -5409,18 +5409,18 @@ declare namespace admin.projectManagement {
     listAppMetadata(): Promise<admin.projectManagement.AppMetadata[]>;
 
     /**
-     * Lists up to 100 Firebase Android apps associated with this Firebase project.
+     * Iterates Firebase Android apps associated with this Firebase project.
      *
-     * @return The list of Android apps.
+     * @return The async iterator to paginate the list of Android apps.
      */
-    listAndroidApps(): Promise<admin.projectManagement.AndroidApp[]>;
+    iterateAndroidApps(): AsyncIterator<admin.projectManagement.AndroidApp[]>;
 
     /**
-     * Lists up to 100 Firebase iOS apps associated with this Firebase project.
+     * Iterates Firebase iOS apps associated with this Firebase project.
      *
-     * @return The list of iOS apps.
+     * @return The async iterator to paginate the list of iOS apps.
      */
-    listIosApps(): Promise<admin.projectManagement.IosApp[]>;
+    iterateIosApps(): AsyncIterator<admin.projectManagement.IosApp[]>;
 
     /**
      * Creates an `AndroidApp` object, referencing the specified Android app within

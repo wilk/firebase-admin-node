@@ -66,6 +66,19 @@ describe('admin.projectManagement', () => {
     });
   });
 
+  describe('iterateIosApps()', () => {
+    it('successfully iterates iOS apps', async () => {
+      for await (const apps of admin.projectManagement().iterateIosApps()) {
+        const metadatas: any[] = await Promise.all(apps.map((app) => app.getMetadata()));
+        expect(metadatas.length).to.be.at.least(1);
+        const metadataOwnedByTest: any =
+          metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
+        expect(metadataOwnedByTest).to.exist;
+        expect(metadataOwnedByTest.appId).to.equal(iosApp.appId);
+      }
+    });
+  });
+
   describe('setDisplayName()', () => {
     it('successfully set project\'s display name', () => {
       const newDisplayName = generateUniqueProjectDisplayName();

@@ -152,7 +152,7 @@ describe('ProjectManagement', () => {
         .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       for await (const apps of projectManagement.iterateAndroidApps()) {
-        apps.should.eventually.deep.equal([]);
+        apps.should.deep.equal([]);
       }
     });
 
@@ -207,7 +207,7 @@ describe('ProjectManagement', () => {
         .returns(Promise.resolve(validListAndroidAppsApiResponse));
       stubs.push(stub);
       for await (const apps of projectManagement.iterateAndroidApps()) {
-        apps.should.eventually.deep.equal(validAndroidApps);
+        apps.should.deep.equal(validAndroidApps);
       }
     });
   });
@@ -255,7 +255,7 @@ describe('ProjectManagement', () => {
         .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       for await (const apps of projectManagement.iterateIosApps()) {
-        apps.should.eventually.deep.equal([]);
+        apps.should.deep.equal([]);
       }
     });
 
@@ -307,7 +307,7 @@ describe('ProjectManagement', () => {
         .returns(Promise.resolve(VALID_LIST_IOS_APPS_API_RESPONSE));
       stubs.push(stub);
       for await (const apps of projectManagement.iterateIosApps()) {
-        apps.should.eventually.deep.equal(validIosApps);
+        apps.should.deep.equal(validIosApps);
       }
     });
   });

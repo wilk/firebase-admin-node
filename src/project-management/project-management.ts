@@ -78,15 +78,19 @@ export class ProjectManagement implements FirebaseServiceInterface {
   /**
    * Iterates Firebase Android apps associated with this Firebase project.
    */
-  public async * iterateAndroidApps() {
-    return this.iteratePlatformApps('android', 'iterateAndroidApps()');
+  public iterateAndroidApps() {
+    return {
+      [Symbol.asyncIterator]: () => this.iteratePlatformApps<AndroidApp>('android', 'iterateAndroidApps()'),
+    };
   }
 
   /**
    * Iterates Firebase Ios apps associated with this Firebase project.
    */
-  public async * iterateIosApps() {
-    return this.iteratePlatformApps('ios', 'iterateIosApps()');
+  public iterateIosApps() {
+    return {
+      [Symbol.asyncIterator]: () => this.iteratePlatformApps<IosApp>('ios', 'iterateIosApps()'),
+    };
   }
 
   /**
@@ -195,36 +199,46 @@ export class ProjectManagement implements FirebaseServiceInterface {
   /**
    * Iterates Firebase apps for a specified platform, associated with this Firebase project.
    */
-  private async * iteratePlatformApps(platform: 'android' | 'ios', callerName: string) {
+  private iteratePlatformApps<T>(platform: 'android' | 'ios', callerName: string): AsyncIterator<T[]> {
     let fetching = true;
-    let nextPageToken;
-    while (fetching) {
-      const listPromise: Promise<object> = (platform === 'android') ?
-        this.requestHandler.listAndroidApps(this.resourceName, nextPageToken)
-        : this.requestHandler.listIosApps(this.resourceName, nextPageToken);
+    let nextPageToken: string;
 
-      const responseData: any = await listPromise;
-      this.assertListAppsResponseData(responseData, callerName);
-
-      nextPageToken = responseData.nextPageToken;
-      if (!nextPageToken) {
-        fetching = false;
-      }
-
-      const apps = (responseData.apps || []).map((appJson: any) => {
-        assertServerResponse(
-          validator.isNonEmptyString(appJson.appId),
-          responseData,
-          `"apps[].appId" field must be present in the ${callerName} response data.`);
-        if (platform === 'android') {
-          return new AndroidApp(appJson.appId, this.requestHandler);
-        } else {
-          return new IosApp(appJson.appId, this.requestHandler);
+    return {
+      next: async (): Promise<IteratorResult<T[]>> => {
+        if (!fetching) {
+          return {done: true, value: []};
         }
-      });
 
-      yield apps;
-    }
+        const listPromise: Promise<object> = (platform === 'android') ?
+          this.requestHandler.listAndroidApps(this.resourceName, nextPageToken)
+          : this.requestHandler.listIosApps(this.resourceName, nextPageToken);
+
+        const responseData: any = await listPromise;
+        this.assertListAppsResponseData(responseData, callerName);
+
+        nextPageToken = responseData.nextPageToken;
+        if (!nextPageToken) {
+          fetching = false;
+        }
+
+        const apps = (responseData.apps || []).map((appJson: any) => {
+          assertServerResponse(
+            validator.isNonEmptyString(appJson.appId),
+            responseData,
+            `"apps[].appId" field must be present in the ${callerName} response data.`);
+          if (platform === 'android') {
+            return new AndroidApp(appJson.appId, this.requestHandler);
+          } else {
+            return new IosApp(appJson.appId, this.requestHandler);
+          }
+        });
+
+        return {
+          value: apps,
+          done: false,
+        };
+      },
+    };
   }
 
   private assertListAppsResponseData(responseData: any, callerName: string): void {
