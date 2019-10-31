@@ -78,18 +78,22 @@ export class ProjectManagement implements FirebaseServiceInterface {
   /**
    * Iterates Firebase Android apps associated with this Firebase project.
    */
-  public iterateAndroidApps() {
+  public iterateAndroidApps(): AsyncIterable<AndroidApp[]> {
     return {
-      [Symbol.asyncIterator]: () => this.iteratePlatformApps<AndroidApp>('android', 'iterateAndroidApps()'),
+      [Symbol.asyncIterator]: (): AsyncIterator<AndroidApp[]> => {
+        return this.iteratePlatformApps<AndroidApp>('android', 'iterateAndroidApps()');
+      },
     };
   }
 
   /**
    * Iterates Firebase Ios apps associated with this Firebase project.
    */
-  public iterateIosApps() {
+  public iterateIosApps(): AsyncIterable<IosApp[]> {
     return {
-      [Symbol.asyncIterator]: () => this.iteratePlatformApps<IosApp>('ios', 'iterateIosApps()'),
+      [Symbol.asyncIterator]: (): AsyncIterator<IosApp[]> => {
+        return this.iteratePlatformApps<IosApp>('ios', 'iterateIosApps()');
+      },
     };
   }
 

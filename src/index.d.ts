@@ -5527,14 +5527,14 @@ declare namespace admin.projectManagement {
      *
      * @return The async iterator to paginate the list of Android apps.
      */
-    iterateAndroidApps(): AsyncIterator<admin.projectManagement.AndroidApp[]>;
+    iterateAndroidApps(): AsyncIterable<admin.projectManagement.AndroidApp[]>;
 
     /**
      * Iterates Firebase iOS apps associated with this Firebase project.
      *
      * @return The async iterator to paginate the list of iOS apps.
      */
-    iterateIosApps(): AsyncIterator<admin.projectManagement.IosApp[]>;
+    iterateIosApps(): AsyncIterable<admin.projectManagement.IosApp[]>;
 
     /**
      * Creates an `AndroidApp` object, referencing the specified Android app within
